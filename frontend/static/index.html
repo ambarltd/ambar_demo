@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <link rel="stylesheet" href="/styles.css">
+    <script src="/ui.js"></script>
+    <script src="/script.js"></script>
+    <link rel="icon" type="image/png" href="/img/favicon.png">
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <title>Ambar Demo</title>
+</head>
+<body>
+<nav class="sidebar"></nav>
+<main class="main container homepage">
+    <div class="instructions">
+        <h1>Congrats, you deployed!</h1>
+        <hr/>
+        <p>This demo illustrates what can be built in minutes using <b>Ambar</b>. It comes with two examples:</p>
+        <ol>
+            <li>A <b>credit card company</b> portal</li>
+            <li>A <b>shipping company</b> portal</li>
+        </ol>
+        <h3>What's next?</h3>
+        <ol>
+            <li>⬅️ Explore the demo projects in the sidebar.</li>
+            <li><a href="#" id="link-to-gh-instructions">Follow instructions here</a> to extend the demo.</li>
+        </ol>
+    </div>
+</main>
+
+<script>
+  Ambar.sidebar("none", document.querySelector("nav"));
+  Ambar.updateGithubInstructionsLink();
+</script>
+
+</body>
+</html>
