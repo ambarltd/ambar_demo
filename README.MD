@@ -8,6 +8,7 @@ This repository contains a demo of [Ambar](https://ambar.cloud). Fork the reposi
 Requirements 
 - A GitHub Account
 - A Web Browser
+- A Secret String (from the Ambar team)
 - A Code Editor (optional)
 
 Not required
