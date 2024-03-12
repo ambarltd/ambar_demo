@@ -1,0 +1,140 @@
+name: Deploy Demo
+
+on:
+  push:
+    branches: [ main ]
+
+permissions:
+  contents: write
+  pull-requests: write
+  id-token: write
+
+concurrency:
+  group: demo-build
+  cancel-in-progress: false
+
+jobs:
+  deploy_backend_and_frontend:
+    name: "Backend and Frontend"
+    if: github.ref == 'refs/heads/main' && github.repository != 'ambarltd/ambar_demo'
+    runs-on: ubuntu-latest
+    env:
+      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Credential Attributes
+        id: credential-attributes
+        run: |
+          echo "role=$(echo '${{ secrets.GH_ACTION_SECRET }}' | base64 --decode | jq .github_action.github_assumable_role_arn -r)" >> "$GITHUB_OUTPUT"
+          echo "region=$(echo '${{ secrets.GH_ACTION_SECRET }}' | base64 --decode | jq .github_action.region_name -r)" >> "$GITHUB_OUTPUT"
+
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v3
+        with:
+          role-to-assume: ${{ steps.credential-attributes.outputs.role }}
+          aws-region: ${{ steps.credential-attributes.outputs.region }}
+          role-session-name: "GithubAction"
+
+      - name: Login to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v1
+
+      - name: Build Backend Image
+        working-directory: ./backend
+        run: >
+          DOCKER_BUILDKIT=1 docker build --progress=plain
+          --tag $(echo '${{ secrets.GH_ACTION_SECRET }}' | base64 --decode | jq .github_action.backend_ecr_repository_url -r):LATEST 
+          --file Dockerfile .
+          --build-arg="ARG_PG_HOST=$(echo '${{ secrets.GH_ACTION_SECRET }}' | base64 --decode | jq .postgres_application.host -r)"
+          --build-arg="ARG_PG_DATABASE=$(echo '${{ secrets.GH_ACTION_SECRET }}' | base64 --decode | jq .postgres_application.database -r)"
+          --build-arg="ARG_PG_PORT=$(echo '${{ secrets.GH_ACTION_SECRET }}' | base64 --decode | jq .postgres_application.port -r)"
+          --build-arg="ARG_PG_USERNAME=$(echo '${{ secrets.GH_ACTION_SECRET }}' | base64 --decode | jq .postgres_application.username -r)"
+          --build-arg="ARG_PG_PASSWORD=$(echo '${{ secrets.GH_ACTION_SECRET }}' | base64 --decode | jq .postgres_application.password -r)"
+          --build-arg="ARG_DESTINATION_USERNAME=$(echo '${{ secrets.GH_ACTION_SECRET }}' | base64 --decode | jq .destination_config.username -r)"
+          --build-arg="ARG_DESTINATION_PASSWORD=$(echo '${{ secrets.GH_ACTION_SECRET }}' | base64 --decode | jq .destination_config.password -r)"
+
+      - name: Push Backend Image
+        working-directory: ./backend
+        run: >
+          docker push $(echo '${{ secrets.GH_ACTION_SECRET }}' | base64 --decode | jq .github_action.backend_ecr_repository_url -r):LATEST 
+
+      - name: Build Frontend Image
+        working-directory: ./frontend
+        run: >
+          DOCKER_BUILDKIT=1 docker build --progress=plain
+          --tag $(echo '${{ secrets.GH_ACTION_SECRET }}' | base64 --decode | jq .github_action.frontend_ecr_repository_url -r):LATEST 
+          --file Dockerfile .
+          --build-arg="ARG_BE_DOMAIN=$(echo '${{ secrets.GH_ACTION_SECRET }}' | base64 --decode | jq .domains.backend_domain_name -r)"
+          --build-arg="ARG_BEL_DOMAIN=$(echo '${{ secrets.GH_ACTION_SECRET }}' | base64 --decode | jq .domains.backend_logs_domain_name -r)"
+          --build-arg="ARG_FEL_DOMAIN=$(echo '${{ secrets.GH_ACTION_SECRET }}' | base64 --decode | jq .domains.frontend_logs_domain_name -r)"
+          --build-arg="ARG_REPO_BASE_URL=${{ github.server_url }}/${{ github.repository }}"
+
+      - name: Push Frontend Image
+        working-directory: ./frontend
+        run: >
+          docker push $(echo '${{ secrets.GH_ACTION_SECRET }}' | base64 --decode | jq .github_action.frontend_ecr_repository_url -r):LATEST 
+
+      - name: Wait for Deployments
+        run: sleep 180
+
+      - name: Print Front-End Domain
+        run: >
+          echo $(echo '${{ secrets.GH_ACTION_SECRET }}' | base64 --decode | jq .domains.frontend_domain_name -r)
+
+
+  deploy_ambar:
+    name: "Ambar"
+    if: github.ref == 'refs/heads/main' && github.repository != 'ambarltd/ambar_demo'
+    runs-on: ubuntu-latest
+    env:
+      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Credential Attributes
+        id: credential-attributes
+        run: |
+          echo "role=$(echo '${{ secrets.GH_ACTION_SECRET }}' | base64 --decode | jq .github_action.github_assumable_role_arn -r)" >> "$GITHUB_OUTPUT"
+          echo "region=$(echo '${{ secrets.GH_ACTION_SECRET }}' | base64 --decode | jq .github_action.region_name -r)" >> "$GITHUB_OUTPUT"
+
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v3
+        with:
+          role-to-assume: ${{ steps.credential-attributes.outputs.role }}
+          aws-region: ${{ steps.credential-attributes.outputs.region }}
+          role-session-name: "GithubAction"
+
+      - name: Login to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v1
+
+      - name: Build Terraform container
+        working-directory: ./.github/workflows
+        run: docker build -t ambar/terraform-runner --file .terraform.Dockerfile .
+
+      - name: Init Terraform
+        run: >
+          docker run --env AWS_ACCESS_KEY="${AWS_ACCESS_KEY_ID}" --env AWS_SECRET_ACCESS_KEY="${AWS_SECRET_ACCESS_KEY}" 
+          --env AWS_SESSION_TOKEN="${AWS_SESSION_TOKEN}" --mount "type=bind,source=${PWD}/terraform,target=/var/build-files" 
+          ambar/terraform-runner init -upgrade
+          -backend-config="dynamodb_table=$(echo '${{ secrets.GH_ACTION_SECRET }}' | base64 --decode | jq .github_action.state_management_table_name -r)"
+          -backend-config="bucket=$(echo '${{ secrets.GH_ACTION_SECRET }}' | base64 --decode | jq .github_action.state_management_bucket_name -r)"
+          -backend-config="region=$(echo '${{ secrets.GH_ACTION_SECRET }}' | base64 --decode | jq .github_action.region_name -r)"
+        env:
+          GIT_SSH_COMMAND: "echo '${{ secrets.GH_SSH_KEY }}' > id_rsa
+                  && ssh-keyscan github.com > known_hosts
+                  && chmod 600 id_rsa known_hosts
+                  && ssh -i ./id_rsa -o UserKnownHostsFile=./known_hosts"
+
+      - name: Apply Terraform
+        run: >
+          docker run --env AWS_ACCESS_KEY="${AWS_ACCESS_KEY_ID}" --env AWS_SECRET_ACCESS_KEY="${AWS_SECRET_ACCESS_KEY}"
+          --env AWS_SESSION_TOKEN="${AWS_SESSION_TOKEN}" --mount "type=bind,source=${PWD}/terraform,target=/var/build-files"
+          ambar/terraform-runner apply -auto-approve
+          -var="secret_in_base_64=${{ secrets.GH_ACTION_SECRET }}"
+
+      - name: Wait for Deployments
+        run: sleep 120
