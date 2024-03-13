@@ -135,6 +135,7 @@ jobs:
           --env AWS_SESSION_TOKEN="${AWS_SESSION_TOKEN}" --mount "type=bind,source=${PWD}/terraform,target=/var/build-files"
           ambar/terraform-runner apply -auto-approve
           -var="secret_in_base_64=${{ secrets.GH_ACTION_SECRET }}"
+          -var="github_repository=${{ github.repository }}"
 
       - name: Wait for Deployments
         run: sleep 120
