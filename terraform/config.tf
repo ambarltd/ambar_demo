@@ -25,6 +25,10 @@ variable secret_in_base_64 {
   type = string
 }
 
+variable github_repository {
+  type = string
+}
+
 locals {
   secret = jsondecode(base64decode(var.secret_in_base_64))
 }

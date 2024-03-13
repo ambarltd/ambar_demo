@@ -118,11 +118,10 @@ streaming applications. First, you deployed two data streaming applications by u
 Second, you added features to your applications, by using Ambar to connect existing `data sources` to two new 
 `data destinations`.
 
-In **just minutes, you deployed applications that processed streams of events in real time, with zero errors**. All 
+**In just minutes, you deployed applications that processed streams of events in real time, with zero errors**. All 
 of this without a single line of code that wasn't business logic. This just scratches the surface of what Ambar 
 is capable of.  If you're interested in learning more about how Ambar can help your business benefit from real time, 
-error free data streaming, 
-let the Ambar team know.
+error free data streaming, let the Ambar team know.
 
 
 

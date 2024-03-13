@@ -1,7 +1,7 @@
 /*
 resource "ambar_filter" "credit_card_transactions" {
   data_source_id  = ambar_data_source.credit_card_events.resource_id
-  description      = "Credit Card Transactions"
+  description      = "Credit Card Transactions ${var.github_repository}"
   filter_contents = "lookup(\"event_type\") == \"transaction\""
 }
 
@@ -9,7 +9,7 @@ resource "ambar_data_destination" "credit_card_fraud_review" {
   filter_ids = [
     ambar_filter.credit_card_transactions.resource_id,
   ]
-  description          = "Credit Card - Review For Fraud"
+  description          = "Credit Card - Review For Fraud ${var.github_repository}"
   destination_endpoint = "https://${local.destination_domain}/credit_card/destination/fraud_review"
   username             = local.destination_username
   password             = local.destination_password
@@ -19,7 +19,7 @@ resource "ambar_data_destination" "credit_card_fraud_review" {
 
 resource "ambar_data_source" "credit_card_events" {
   data_source_type = "postgres"
-  description      = "Credit Card Events"
+  description      = "Credit Card Events ${var.github_repository}"
 
   data_source_config = {
     "hostname" : local.postgres_source_host,
@@ -37,7 +37,7 @@ resource "ambar_data_source" "credit_card_events" {
 
 resource "ambar_filter" "all_credit_card_events" {
   data_source_id  = ambar_data_source.credit_card_events.resource_id
-  description      = "All Credit Card Events"
+  description      = "All Credit Card Events ${var.github_repository}"
   filter_contents = "true"
 }
 
@@ -45,7 +45,7 @@ resource "ambar_data_destination" "credit_card_all_events" {
   filter_ids = [
     ambar_filter.all_credit_card_events.resource_id,
   ]
-  description          = "Credit Card - All Events"
+  description          = "Credit Card - All Events ${var.github_repository}"
   destination_endpoint = "https://${local.destination_domain}/credit_card/destination/all_events"
   username             = local.destination_username
   password             = local.destination_password
