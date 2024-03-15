@@ -214,7 +214,11 @@ function init(root, initialState, update, view) {
       queue = [];
 
       msgs.forEach(msg => {
-        state = update(state, msg, enqueue);
+        try {
+          state = update(state, msg, enqueue);
+        } catch (e) {
+          console.error(e);
+        }
       });
 
       draw();

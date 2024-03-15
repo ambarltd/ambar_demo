@@ -89,12 +89,13 @@ async function fetchEvents(url) {
     try {
         const response = await fetch(url);
         if (!response.ok) {
-            return null;
+            return [];
         }
         return await response.json();
     } catch (error) {
         console.error('Error fetching events:', error);
     }
+  return [];
 }
 
 function viewTitle({ title, refreshing, countdown, autoRefresh, currentPage }) {
