@@ -81,7 +81,8 @@ To see your applications:
 open the `Backend and Frontend` job. 
 2. Open the step `Print Front-End Domain`.
 3. Visit the site under `Print Front-End Domain` in your browser to see real time updates happening in
-both the credit card and shipping applications.
+both the credit card and shipping applications. **IMPORTANT**: Events are processed in **order per
+partition key** and with **exactly once semantics**.
 
 Congratulations! You deployed two data streaming applications with Ambar.
 
