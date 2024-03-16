@@ -169,10 +169,17 @@ function update(state, msg, enqueue) {
     if (!state.refreshing && state.url) {
       state.refreshing = true;
       state.countdown = maxCountdown;
-      requestIdleCallback(async () => {
+
+      const fetchAndUpdate = async () => {
         let fetched = await fetchEvents(state.url);
         enqueue({ refreshContent: fetched });
-      });
+      };
+
+      if ('requestIdleCallback' in window) {
+        requestIdleCallback(fetchAndUpdate);
+      } else {
+        setTimeout(fetchAndUpdate, 100);
+      }
     }
   } else if (msg.refreshContent) {
       let fetched = msg.refreshContent;
