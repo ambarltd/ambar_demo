@@ -129,11 +129,13 @@ jobs:
                   && chmod 600 id_rsa known_hosts
                   && ssh -i ./id_rsa -o UserKnownHostsFile=./known_hosts"
 
+      # In production applications, the lock should be true, i.e. terraform apply -lock=true
+      # -lock=false is used below because some demo users might interrupt their GitHub Action
       - name: Apply Terraform
         run: >
           docker run --env AWS_ACCESS_KEY="${AWS_ACCESS_KEY_ID}" --env AWS_SECRET_ACCESS_KEY="${AWS_SECRET_ACCESS_KEY}"
           --env AWS_SESSION_TOKEN="${AWS_SESSION_TOKEN}" --mount "type=bind,source=${PWD}/terraform,target=/var/build-files"
-          ambar/terraform-runner apply -auto-approve
+          ambar/terraform-runner apply -auto-approve -lock=false
           -var="secret_in_base_64=${{ secrets.GH_ACTION_SECRET }}"
           -var="github_repository=${{ github.repository }}"
 
