@@ -1,5 +1,5 @@
 window.Ambar = (function() {
-const { h, empty, text } = UI;
+const { h, text } = UI;
 const pageSize = 10;
 const maxCountdown = 5;
 
@@ -33,46 +33,15 @@ async function sidebar(active, nav) {
               text("Shipping Application")
             ])
           ]),
-
-          h("li", {}, [
-            h("a", { "href": state.backendLogs, "class": "nav-link link-dark" }, [
-              h("i", { "class": "bi bi-file-earmark-text-fill me-2" }, []),
-              text("Backend logs")
-            ])
-          ]),
-
-          h("li", {}, [
-            h("a", { "href": state.frontendLogs, "class": "nav-link link-dark" }, [
-              h("i", { "class": "bi bi-file-earmark-text me-2" }, []),
-              text("Frontend logs")
-            ])
-          ]),
         ]),
       ]
     }
 
-    const initialState = {
-      backendLogs : null,
-      frontendLogs : null
-    }
-
     function update(state, msg) {
-      if (msg.setBackendLogs) {
-        state.backendLogs = msg.setBackendLogs;
-      }
-      if (msg.setFrontendLogs) {
-        state.frontendLogs = msg.setFrontendLogs;
-      }
-
       return state;
     }
 
-    let bar = UI.init(nav, {}, update, view);
-
-    let bel_domain = await getDomain('/domains/bel-domain.txt');
-    bar.enqueue({ setBackendLogs : `http://${bel_domain}` })
-    let fel_domain = await getDomain('/domains/fel-domain.txt');
-    bar.enqueue({ setFrontendLogs : `http://${fel_domain}` })
+    UI.init(nav, {}, update, view);
 }
 
 async function getDomain(file) {
@@ -98,7 +67,7 @@ async function fetchEvents(url) {
   return [];
 }
 
-function viewTitle({ title, refreshing, countdown, autoRefresh, currentPage }) {
+function viewTitle({ title, refreshing, countdown, autoRefresh, autoRefreshOn, currentPage }) {
   let r = h("div", { "class" : "d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom" }, [
     h("h3", {}, [text(title)]),
     h("span", {}, [
@@ -106,13 +75,21 @@ function viewTitle({ title, refreshing, countdown, autoRefresh, currentPage }) {
         [ h("button", { class : "btn btn-sm btn-outline-secondary", onClick: { refresh: true } }, [
           refreshing
             ? h("div", { class:"spinner-border spinner-border-sm", role: "status" }, [])
-            : autoRefresh
+            : (autoRefresh && autoRefreshOn)
             ? text(`Refresh (${countdown})`)
             : text(`Refresh`)
           ])
-          , autoRefresh ? empty() : h("button", { class : "btn btn-sm btn-outline-secondary", onClick: { prevPage: true } }, [text("Newer")])
-          , autoRefresh ? empty() : h("button", { class : "btn btn-sm btn-outline-secondary", onClick: { nextPage: true } }, [text("Older")])
-        ])
+        ].concat(
+          autoRefresh
+          ? [ h("button", {
+              class : `btn btn-sm btn-outline-primary ${autoRefreshOn ? "active" : ""}`,
+              onClick : { setAutoRefreshOn: true, value: !autoRefreshOn } },
+              [ text("Auto refresh") ]
+            ) ]
+          : [ h("button", { class : "btn btn-sm btn-outline-secondary", onClick: { prevPage: true } }, [text("Newer")]),
+              h("button", { class : "btn btn-sm btn-outline-secondary", onClick: { nextPage: true } }, [text("Older")]),
+            ]
+        ))
     ])
   ]);
   return r;
@@ -145,9 +122,9 @@ function viewNoResults(title) {
   ]);
 }
 
-function view({ title, refreshing, countdown, currentPage, events, autoRefresh}) {
+function view({ title, refreshing, countdown, currentPage, events, autoRefresh, autoRefreshOn }) {
   return events.length == 0 ? [viewNoResults(title)] : [
-    viewTitle({ title, refreshing, countdown, autoRefresh, currentPage }),
+    viewTitle({ title, refreshing, countdown, autoRefresh, autoRefreshOn, currentPage }),
     viewTable(getPage(events, currentPage)),
   ]
 }
@@ -189,7 +166,7 @@ function update(state, msg, enqueue) {
       state.refreshing = false;
       state.currentPage = 0;
   } else if (msg.countdownTick) {
-    if (!state.refreshing) {
+    if (!state.refreshing && state.autoRefreshOn) {
       state.countdown = Math.max(0, state.countdown - 1);
       if (state.countdown == 0) {
         enqueue({ refresh: true });
@@ -197,6 +174,8 @@ function update(state, msg, enqueue) {
     }
   } else if (msg.setUrl) {
     state.url = msg.setUrl;
+  } else if (msg.setAutoRefreshOn) {
+    state.autoRefreshOn = msg.value;
   }
   return state;
 }
@@ -206,6 +185,7 @@ async function createInteractiveTable(title, root, url_suffix, autoRefresh) {
       title,
       url: null,
       autoRefresh,
+      autoRefreshOn: true,
       countdown: maxCountdown,
       currentPage: 0,
       events : [],

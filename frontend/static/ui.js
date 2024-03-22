@@ -5,7 +5,6 @@
 //      , children : [Spec]
 //      }
 //    | { textContent : string }
-//    | { empty : true }      -- an element that doesn't render anything
 //
 // ElementDiff
 //    = Replace Element
@@ -84,13 +83,7 @@ function diffOne(l, r) {
   return { modify: { removeAttr, setAttr, removeListeners, addListeners, children } };
 }
 
-function removeEmpty(els) {
-  return Array.from(els).filter(e => !e.empty);
-}
-
-function diffList(ls_raw, rs_raw) {
-  let ls = removeEmpty(ls_raw);
-  let rs = removeEmpty(rs_raw);
+function diffList(ls, rs) {
   let len = Math.max(ls.length, rs.length);
   let diffs = [];
   for (let i = 0; i < len; i++) {
@@ -121,8 +114,7 @@ function create(enqueue, spec) {
       : el.setAttribute(attr, value);
   }
 
-  let children = removeEmpty(spec.children);
-  for (let i in children) {
+  for (let i in spec.children) {
     const childSpec = spec.children[i];
     const child = create(enqueue, childSpec);
     el.appendChild(child);
@@ -178,17 +170,15 @@ function apply(el, enqueue, childrenDiff) {
 
 // Create an HTML element
 function h(tag, attributes, children) {
+  if (children.includes(undefined)) {
+    throw new Error("Undefined children in: ", JSON.stringify(children));
+  }
   return { tag, attributes, children };
 }
 
 // Create a text element
 function text(textContent) {
   return { textContent }
-}
-
-// Create an elements that will be disregarded.
-function empty() {
-  return { empty : true }
 }
 
 // Start managing the contents of an HTML node.
@@ -233,5 +223,5 @@ function init(root, initialState, update, view) {
   return { enqueue };
 }
 
-return { init, h, empty, text };
+return { init, h, text };
 })();

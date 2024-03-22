@@ -67,8 +67,6 @@ jobs:
           --tag $(echo '${{ secrets.GH_ACTION_SECRET }}' | base64 --decode | jq .github_action.frontend_ecr_repository_url -r):LATEST 
           --file Dockerfile .
           --build-arg="ARG_BE_DOMAIN=$(echo '${{ secrets.GH_ACTION_SECRET }}' | base64 --decode | jq .domains.backend_domain_name -r)"
-          --build-arg="ARG_BEL_DOMAIN=$(echo '${{ secrets.GH_ACTION_SECRET }}' | base64 --decode | jq .domains.backend_logs_domain_name -r)"
-          --build-arg="ARG_FEL_DOMAIN=$(echo '${{ secrets.GH_ACTION_SECRET }}' | base64 --decode | jq .domains.frontend_logs_domain_name -r)"
           --build-arg="ARG_REPO_BASE_URL=${{ github.server_url }}/${{ github.repository }}"
 
       - name: Push Frontend Image
