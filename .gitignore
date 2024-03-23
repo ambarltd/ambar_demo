@@ -1,0 +1,7 @@
+.idea
+.env
+.secret
+.terraform
+.terraform.lock.hcl
+.terraform.tfstate.lock.info
+domains/
