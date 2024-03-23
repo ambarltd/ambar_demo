@@ -11,7 +11,7 @@ body {
 }
 
 .main h1 {
-    color: #333;
+    color: #000;
     padding-top: 0.15em;
     font-weight: 500;
 }
@@ -282,9 +282,12 @@ a:hover {
     }
 }
 
+.demo_highlights {
+    padding: 1.25em 1.25em 0 1.25em;
+}
 
 .demo_bottom {
-    padding: 2em 1.25em;
+    padding: 0.5em 1.25em 2em 1.25em;
 }
 
 .demo_bottom .tab-content {
@@ -293,4 +296,24 @@ a:hover {
 
 .main.homepage {
     padding: 1.5em 2.2em;
+}
+
+.demo-components {
+    width: 1000px;
+    height: 450px;
+    overflow: hidden;
+    padding: 10px 0 10px 0;
+}
+
+.demo-components img {
+    width: 1000px;
+    position: relative;
+    top: -30px;
+    left: -80px;
+}
+
+.demo_highlights p {
+    font-size: 14px;
+    color: #777;
+    margin-bottom: 7px;
 }

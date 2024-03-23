@@ -209,7 +209,7 @@ async function createInteractiveTable(title, root, url_suffix, autoRefresh) {
 
 async function updateGithubInstructionsLink() {
     let repo_base_url = await getDomain('/domains/repo-base-url.txt');
-    document.getElementById('link-to-gh-instructions').href = `${repo_base_url}?tab=readme-ov-file#5-create-new-features`;
+    document.getElementById('link-to-gh-instructions').href = `${repo_base_url}?tab=readme-ov-file#5-deploy-a-shipping-application`;
 }
 
 return { createInteractiveTable, sidebar, updateGithubInstructionsLink };

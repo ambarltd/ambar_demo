@@ -1,22 +1,4 @@
 /*
-resource "ambar_filter" "shipping_returns" {
-  data_source_id  = ambar_data_source.shipping_events.resource_id
-  description      = "Shipping Returns ${var.github_repository}"
-  filter_contents = "lookup(\"event_type\") == \"shipment_returned\""
-}
-
-resource "ambar_data_destination" "shipping_return_review" {
-  filter_ids = [
-    ambar_filter.shipping_returns.resource_id,
-  ]
-  description          = "Shipping - Review Return ${var.github_repository}"
-  destination_endpoint = "https://${local.destination_domain}/shipping/destination/returns_review"
-  username             = local.destination_username
-  password             = local.destination_password
-}
-*/
-
-
 resource "ambar_data_source" "shipping_events" {
   data_source_type = "postgres"
   description      = "Shipping Events ${var.github_repository}"
@@ -41,6 +23,12 @@ resource "ambar_filter" "all_shipping_events" {
   filter_contents = "true"
 }
 
+resource "ambar_filter" "shipping_returns" {
+  data_source_id  = ambar_data_source.shipping_events.resource_id
+  description      = "Shipping Returns ${var.github_repository}"
+  filter_contents = "lookup(\"event_type\") == \"shipment_returned\""
+}
+
 resource "ambar_data_destination" "shipping_all_events" {
   filter_ids = [
     ambar_filter.all_shipping_events.resource_id,
@@ -50,3 +38,14 @@ resource "ambar_data_destination" "shipping_all_events" {
   username             = local.destination_username
   password             = local.destination_password
 }
+
+resource "ambar_data_destination" "shipping_return_review" {
+  filter_ids = [
+    ambar_filter.shipping_returns.resource_id,
+  ]
+  description          = "Shipping - Review Return ${var.github_repository}"
+  destination_endpoint = "https://${local.destination_domain}/shipping/destination/returns_review"
+  username             = local.destination_username
+  password             = local.destination_password
+}
+*/
