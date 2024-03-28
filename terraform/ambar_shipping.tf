@@ -1,4 +1,4 @@
-/*
+
 resource "ambar_data_source" "shipping_events" {
   data_source_type = "postgres"
   description      = "Shipping Events ${var.github_repository}"
@@ -48,4 +48,3 @@ resource "ambar_data_destination" "shipping_return_review" {
   username             = local.destination_username
   password             = local.destination_password
 }
-*/
