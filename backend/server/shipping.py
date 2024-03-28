@@ -103,4 +103,3 @@ def returns_review():
     db.close()
 
     return results
-'''
