@@ -8,7 +8,6 @@ shipping_routes = Blueprint('shipping', __name__)
 logger = logging.getLogger('waitress')
 
 
-'''
 @shipping_routes.route('/shipping/destination/all_events', methods=['POST'])
 @requires_auth
 def destination_all_events():
@@ -103,4 +102,3 @@ def returns_review():
     db.close()
 
     return results
-'''
